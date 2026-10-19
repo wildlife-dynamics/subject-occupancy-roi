@@ -116,9 +116,7 @@ def main(params: dict[str, Any], validate_params_schema: bool = True):
             ],
             unpack_depth=1,
         )
-        .partial(
-            groupers=[{"index_name": "extra__name"}], **(params.get("groupers") or {})
-        )
+        .partial(**(params.get("groupers") or {}))
         .call()
     )
 
@@ -169,21 +167,7 @@ def main(params: dict[str, Any], validate_params_schema: bool = True):
             ],
             unpack_depth=1,
         )
-        .partial(
-            base_maps=[
-                {
-                    "url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
-                    "opacity": 1,
-                    "max_zoom": 20,
-                },
-                {
-                    "url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-                    "opacity": 0.5,
-                    "max_zoom": 20,
-                },
-            ],
-            **(params.get("base_maps_pydeck") or {}),
-        )
+        .partial(**(params.get("base_maps_pydeck") or {}))
         .call()
     )
 
@@ -202,7 +186,6 @@ def main(params: dict[str, Any], validate_params_schema: bool = True):
         )
         .partial(
             client=er_connection,
-            selection={"feature_set_names": ["Boundaries"]},
             raise_on_empty=False,
             **(params.get("earthranger_features") or {}),
         )

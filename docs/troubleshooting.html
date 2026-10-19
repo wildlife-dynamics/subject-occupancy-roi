@@ -27,12 +27,49 @@
 
     <div class="error-block">
       <p class="symptom">A data source connection fails or times out</p>
-      <p>Check the server URL and credentials in the connection, and that you can sign in to the same server in a browser with them. The account needs API access to the data the workflow asks for.</p>
+      <p>Check the server URL and credentials in the connection, and that you can sign in to the same server in a browser with them. The account needs API access to subjects, observations and features.</p>
     </div>
 
     <div class="error-block">
+      <p class="symptom">"Unknown feature set name(s)" or "Unknown feature type name(s)"</p>
+      <p>A name under <strong>Regions</strong> doesn't match EarthRanger. Names must match exactly, including capitals; the error lists the names that exist on the site. Feature types are the types listed inside each feature set in EarthRanger.</p>
+    </div>
+
+    <div class="error-block">
+      <p class="symptom">"No EarthRanger feature with id …"</p>
+      <p>A <strong>Feature IDs</strong> entry doesn't exist on this data source. Copy the ID from the feature's page in EarthRanger.</p>
+    </div>
+
+    <div class="error-block">
+      <p class="symptom">Add under Regions does nothing</p>
+      <p>The workflow was compiled with an ext-mep version older than the fix, or the Regions override in <code>spec.yaml</code> sets <code>additionalProperties: false</code>. Update ext-mep, remove that setting and recompile.</p>
+    </div>
+
+    <div class="error-block">
+      <p class="symptom">The run fails after choosing Time or Spatial grouping</p>
+      <p>This workflow only supports grouping by <strong>Subject Name</strong>. It doesn't add the time or region index that Time and Spatial grouping need, so remove those entries from <strong>Group by</strong>.</p>
+    </div>
+
+    <h2>Results</h2>
+
+    <div class="error-block">
       <p class="symptom">The run returns no data</p>
-      <p>Names typed into the settings (a subject group, an event type) must match the data source exactly, including capitals. Widen the time range if it's short.</p>
+      <p>The subject group has no fixes in the time range. Widen the time range, or check the group in EarthRanger.</p>
+    </div>
+
+    <div class="error-block">
+      <p class="symptom">The occupancy table is empty</p>
+      <p>No subject's 99.9% home range reaches any region. Check that the regions are polygons near the tracks (lines and points are never measured), or choose different feature sets or types.</p>
+    </div>
+
+    <div class="error-block">
+      <p class="symptom">A region is missing from the table</p>
+      <p>The home range doesn't reach it, or it's a line or point feature. Regions with the same name are merged into one row.</p>
+    </div>
+
+    <div class="error-block">
+      <p class="symptom">The run is slow</p>
+      <p>Leaving <strong>Feature sets</strong> empty fetches every feature on the site, including large sets such as roads. Name only the sets or types you need.</p>
     </div>
 
     <h2>Developing</h2>

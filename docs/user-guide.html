@@ -21,39 +21,95 @@
 
   <main>
     <h1>User Guide</h1>
-    <p class="lede">How to load subject-occupancy-roi, connect its data sources and fill in its settings.</p>
+    <p class="lede">How to load the workflow, choose the subject group and regions, and read the results.</p>
 
     <h2>1. Load the workflow</h2>
     <p>In the workflow runner, add a new template using this repository's URL, then select <strong>subject-occupancy-roi</strong> from the templates list.</p>
 
     <h2>2. Data sources</h2>
-    <ul><li>Access to a <strong>EarthRanger</strong> data source, set up as a connection</li></ul>
+    <ul><li>An <strong>EarthRanger</strong> data source, set up as a connection. It provides both the subjects' GPS fixes and the regions.</li></ul>
 
     <h2>3. Settings</h2>
-    <p>The run form asks for these. Fields with a default can be left as they are.</p>
+    <p>Only the workflow name, time range, data source and subject group must be filled in. Choosing the regions is strongly recommended.</p>
+
     <h3>Set Workflow Details</h3>
     <table>
       <thead><tr><th>Field</th><th>Description</th><th>Default</th></tr></thead>
-      <tbody><tr><td>Workflow Name <em>(required)</em></td><td></td><td>—</td></tr><tr><td>Workflow Description</td><td></td><td><code></code></td></tr></tbody>
+      <tbody>
+        <tr><td>Workflow Name <em>(required)</em></td><td>A short name to identify this run</td><td>—</td></tr>
+        <tr><td>Workflow Description</td><td>Optional notes about the run</td><td>empty</td></tr>
+      </tbody>
     </table>
+
+    <h3>Set Groupers</h3>
+    <p>How the dashboard is split into views.</p>
+    <table>
+      <thead><tr><th>Field</th><th>Description</th><th>Default</th></tr></thead>
+      <tbody>
+        <tr><td>Group by</td><td>Add <strong>Category → Subject Name</strong> to give each subject its own view of the map and table. Leave the list empty to show every subject together in one view.</td><td>empty (one view)</td></tr>
+      </tbody>
+    </table>
+    <p class="note">Category is limited to <strong>Subject Name</strong>. The form also offers <strong>Time</strong> and <strong>Spatial</strong> grouping, but this workflow doesn't support them yet, so leave them out.</p>
+
     <h3>Set Time Range</h3>
     <table>
       <thead><tr><th>Field</th><th>Description</th><th>Default</th></tr></thead>
-      <tbody><tr><td>Since <em>(required)</em></td><td>The start time</td><td>—</td></tr><tr><td>Until <em>(required)</em></td><td>The end time</td><td>—</td></tr><tr><td>Timezone</td><td></td><td>—</td></tr></tbody>
+      <tbody>
+        <tr><td>Since <em>(required)</em></td><td>Start of the period to analyse</td><td>—</td></tr>
+        <tr><td>Until <em>(required)</em></td><td>End of the period to analyse</td><td>—</td></tr>
+        <tr><td>Timezone</td><td>Optional timezone for Since/Until</td><td>—</td></tr>
+      </tbody>
     </table>
+
     <h3>Connect to EarthRanger</h3>
     <table>
       <thead><tr><th>Field</th><th>Description</th><th>Default</th></tr></thead>
-      <tbody><tr><td>Data source <em>(required)</em></td><td>Select one of your configured data sources.</td><td>—</td></tr></tbody>
+      <tbody>
+        <tr><td>Data source <em>(required)</em></td><td>The EarthRanger connection to use</td><td>—</td></tr>
+      </tbody>
     </table>
+
+    <h3>Basemap URLs</h3>
+    <p>The map imagery under the home ranges and regions. The defaults can be left as they are.</p>
+
+    <h3>Regions</h3>
+    <p>The EarthRanger features to measure occupancy in. They are also drawn on the map.</p>
+    <table>
+      <thead><tr><th>Select regions by</th><th>Field</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>Feature sets <em>(default)</em></td><td>Feature set names</td><td>Every feature in each named set becomes a region, e.g. <code>Boundaries</code>. Leave empty to use every feature set on the site.</td></tr>
+        <tr><td>Feature types</td><td>Feature type names</td><td>Every feature of these types becomes a region, e.g. <code>Conservancy</code> or <code>Park</code>, whichever set it is in.</td></tr>
+        <tr><td>Feature IDs</td><td>Feature IDs</td><td>Individual features, by their EarthRanger ID.</td></tr>
+      </tbody>
+    </table>
+    <p>Click <strong>Add</strong> under the chosen option for each name or ID. Names must match EarthRanger exactly, including capitals; a wrong name stops the run with a list of the names that exist.</p>
+    <p class="note">Leaving Feature sets empty fetches every feature on the site, which can include large sets such as roads. Name the sets or types you need to keep runs quick.</p>
+
     <h3>Subject Group Name</h3>
     <table>
       <thead><tr><th>Field</th><th>Description</th><th>Default</th></tr></thead>
-      <tbody><tr><td>Subject Group Name <em>(required)</em></td><td>⚠️ The use of a group with mixed subtypes could lead to unexpected results</td><td>—</td></tr></tbody>
+      <tbody>
+        <tr><td>Subject Group Name <em>(required)</em></td><td>The subject group whose home ranges are measured, picked from a drop-down of the data source's subject groups. ⚠️ A group with mixed subtypes could lead to unexpected results.</td><td>—</td></tr>
+      </tbody>
     </table>
 
-    <h2>4. Run it and find the results</h2>
-    <p>The workflow writes its files to the results folder the runner gives it (<code>ECOSCOPE_WORKFLOWS_RESULTS</code>), and shows its dashboard when it finishes.</p>
+    <h2>4. Run it and read the results</h2>
+    <p>Click <strong>Submit</strong>. When the run finishes, the dashboard shows:</p>
+    <ul>
+      <li><strong>Home Range Map</strong>: each subject's home range, coloured from the core (50%) to the outer edge (99.9%), over the regions.</li>
+      <li><strong>Occupancy</strong>: one row per subject and region its home range reaches.</li>
+    </ul>
+    <table>
+      <thead><tr><th>Column</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td>Subject Name</td><td>The subject</td></tr>
+        <tr><td>region</td><td>The region's name, from the feature's name (or a numbered "Region n" if it has none)</td></tr>
+        <tr><td>Region Area (km²)</td><td>The whole region's area</td></tr>
+        <tr><td>Area Covered (km²)</td><td>The part of the region inside the subject's 99.9% home range</td></tr>
+        <tr><td>Occupancy (%)</td><td>Area Covered ÷ Region Area × 100</td></tr>
+      </tbody>
+    </table>
+    <p>Regions the home range doesn't reach, and lines and points such as roads, aren't listed. The table is also saved as CSV in the results folder (<code>ECOSCOPE_WORKFLOWS_RESULTS</code>).</p>
   </main>
 
   <footer class="site-footer">

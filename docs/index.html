@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>subject-occupancy-roi</title>
+  <title>Subject Occupancy in Regions</title>
   <link rel="stylesheet" href="assets/style.css" />
 </head>
 <body>
@@ -20,32 +20,43 @@
   </header>
 
   <main>
-    <h1>subject-occupancy-roi</h1>
-    <p class="lede">subject-occupancy-roi</p>
+    <h1>Subject Occupancy in Regions</h1>
+    <p class="lede">Estimates each subject's home range from its EarthRanger GPS tracks, then measures how much of each region (a conservancy, park or census block, for example) that home range covers.</p>
 
     <div class="card-grid">
       <a class="card" href="user-guide.html">
         <h3>User Guide</h3>
-        <p>Loading the workflow, connecting its data sources and filling in its settings.</p>
+        <p>Loading the workflow, choosing the subject group and regions, and reading the results.</p>
       </a>
       <a class="card" href="technical-guide.html">
         <h3>Technical Guide</h3>
-        <p>Each step of the workflow, the task packages it uses, and how to recompile and test it.</p>
+        <p>How home ranges and occupancy are calculated, each step of the workflow, and how to recompile and test it.</p>
       </a>
       <a class="card" href="troubleshooting.html">
         <h3>Troubleshooting</h3>
-        <p>Common errors while configuring or running the workflow, and how to resolve them.</p>
+        <p>Common problems while configuring or running the workflow, and how to resolve them.</p>
       </a>
     </div>
 
-    <h2>What it does</h2>
+    <h2>What it produces</h2>
     <table>
-      <thead><tr><th>Step</th><th>What it does</th></tr></thead>
-      <tbody><tr><td><strong>Set Workflow Details</strong></td><td>Add information that will help to differentiate this workflow from another.</td></tr><tr><td><strong>Set Groupers</strong></td><td></td></tr><tr><td><strong>Set Time Range</strong></td><td>Choose the period of time to analyze.</td></tr><tr><td><strong>Connect to EarthRanger</strong></td><td></td></tr><tr><td><strong>BaseMaps</strong></td><td></td></tr><tr><td><strong>Get Features</strong></td><td>Fetch EarthRanger features as a GeoDataFrame, chosen by feature set, feature type or feature ID, with each feature&#x27;s type and set.</td></tr><tr><td><strong>Subject Group Name</strong></td><td>Get observations for a subject group from EarthRanger.</td></tr><tr><td><strong>Convert Crs</strong></td><td>Re-project a GeoDataFrame&#x27;s geometries to the given CRS.</td></tr><tr><td><strong>Process Relocations</strong></td><td></td></tr><tr><td><strong>Style Spatial Features</strong></td><td>Style EarthRanger features for the map, the same way as STE&#x27;s get_spatial_features: native EarthRanger colours first, then any overrides in `style`. Pass the result to create_spatial_features_layer.</td></tr><tr><td><strong>Relocations To Trajectory</strong></td><td></td></tr><tr><td><strong>Create Spatial Features Layer</strong></td><td>Create GeoJsonLayer / IconLayer definitions for one or more styled GDFs.</td></tr><tr><td><strong>Split Groups</strong></td><td></td></tr><tr><td><strong>Calculate Elliptical Time Density Grouped</strong></td><td>Compute elliptical time-density home ranges per group.</td></tr><tr><td><strong>Filter Rows</strong></td><td></td></tr><tr><td><strong>Convert Crs</strong></td><td>Re-project a GeoDataFrame&#x27;s geometries to the given CRS.</td></tr><tr><td><strong>Compute View State From Gdf</strong></td><td></td></tr><tr><td><strong>Apply Color Map</strong></td><td>Adds a color column to the dataframe based on the categorical values in the specified column.</td></tr><tr><td><strong>Compute Region Occupancy</strong></td><td>How much of each region each subject&#x27;s home range (its `percentile` time density range) covers.</td></tr><tr><td><strong>Filter Rows</strong></td><td></td></tr><tr><td><strong>Create Geojson Layer</strong></td><td>Creates a GeoJSON layer definition based on the provided configuration.</td></tr><tr><td><strong>Persist Df</strong></td><td>Persist dataframe to a file or cloud storage object.</td></tr><tr><td><strong>Combine Deckgl Map Layers</strong></td><td>Combine static and grouped map layers into a render-ready list.</td></tr><tr><td><strong>Map Columns</strong></td><td>Maps and transforms the columns of a DataFrame based on the provided parameters. The order of the operations is as follows: drop columns, retain/reorder columns, and rename columns.</td></tr><tr><td><strong>Draw Table</strong></td><td>Creates an HTML table of the provided dataframe.</td></tr><tr><td><strong>Groupbykey</strong></td><td></td></tr><tr><td><strong>Persist Text</strong></td><td>Persist text to a file or cloud storage object.</td></tr><tr><td><strong>Draw Map</strong></td><td>Creates a map based on the provided layer definitions and configuration.</td></tr><tr><td><strong>Create Table Widget Single View</strong></td><td>Create a table widget with a single view.</td></tr><tr><td><strong>Persist Text</strong></td><td>Persist text to a file or cloud storage object.</td></tr><tr><td><strong>Merge Widget Views</strong></td><td>Merge widgets with the same `title` and `widget_type`.</td></tr><tr><td><strong>Create Map Widget Single View</strong></td><td>Create a map widget with a single view.</td></tr><tr><td><strong>Merge Widget Views</strong></td><td>Merge widgets with the same `title` and `widget_type`.</td></tr><tr><td><strong>Gather Dashboard</strong></td><td></td></tr></tbody>
+      <thead><tr><th>Output</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Home Range Map</strong></td><td>Each subject's elliptical time-density home range, coloured by percentile (50% to 99.9%), over the chosen regions in their EarthRanger colours.</td></tr>
+        <tr><td><strong>Occupancy table</strong></td><td>For each subject and each region its home range reaches: the region's area, the area of it the home range covers, and that as a percentage of the region.</td></tr>
+        <tr><td><strong>CSV files</strong></td><td>The occupancy table, one file per dashboard view.</td></tr>
+      </tbody>
     </table>
 
+    <h2>Occupancy in one line</h2>
+    <p><strong>Occupancy (%)</strong> = area of the region inside the subject's 99.9% home range ÷ the region's area × 100. A subject whose home range covers a quarter of a park has 25% occupancy of that park.</p>
+
     <h2>Requirements</h2>
-    <ul><li>Access to a <strong>EarthRanger</strong> data source, set up as a connection</li></ul>
+    <ul>
+      <li>An <strong>EarthRanger</strong> connection set up in the workflow runner.</li>
+      <li>A <strong>subject group</strong> whose subjects have GPS fixes in the time range.</li>
+      <li><strong>Regions</strong> saved in EarthRanger as polygon features, in a feature set (e.g. <code>Boundaries</code>) or with a feature type (e.g. <code>Conservancy</code>).</li>
+    </ul>
 
     <h2>Get started</h2>
     <p>New to the workflow? Start with the <a href="user-guide.html">User Guide</a>. Running into an error? Check <a href="troubleshooting.html">Troubleshooting</a> first.</p>

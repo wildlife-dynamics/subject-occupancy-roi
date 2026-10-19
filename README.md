@@ -1,89 +1,120 @@
-# subject-occupancy-roi
+# Subject Occupancy in Regions
 
-subject-occupancy-roi
+Estimates each subject's home range from its EarthRanger GPS tracks, then measures how much of each region (for example a conservancy, park or census block) that home range covers. The results are shown as a map of the home ranges over the regions, plus a table of each subject's occupancy per region.
 
-## What it does
+Documentation: [docs/index.html](docs/index.html) (User Guide, Technical Guide and Troubleshooting).
 
-| Step | What it does |
-|---|---|
-| **Set Workflow Details** | Add information that will help to differentiate this workflow from another. |
-| **Set Groupers** |  |
-| **Set Time Range** | Choose the period of time to analyze. |
-| **Connect to EarthRanger** |  |
-| **BaseMaps** |  |
-| **Get Features** | Fetch EarthRanger features as a GeoDataFrame, chosen by feature set, feature type or feature ID, with each feature's type and set. |
-| **Subject Group Name** | Get observations for a subject group from EarthRanger. |
-| **Convert Crs** | Re-project a GeoDataFrame's geometries to the given CRS. |
-| **Process Relocations** |  |
-| **Style Spatial Features** | Style EarthRanger features for the map, the same way as STE's get_spatial_features: native EarthRanger colours first, then any overrides in `style`. Pass the result to create_spatial_features_layer. |
-| **Relocations To Trajectory** |  |
-| **Create Spatial Features Layer** | Create GeoJsonLayer / IconLayer definitions for one or more styled GDFs. |
-| **Split Groups** |  |
-| **Calculate Elliptical Time Density Grouped** | Compute elliptical time-density home ranges per group. |
-| **Filter Rows** |  |
-| **Convert Crs** | Re-project a GeoDataFrame's geometries to the given CRS. |
-| **Compute View State From Gdf** |  |
-| **Apply Color Map** | Adds a color column to the dataframe based on the categorical values in the specified column. |
-| **Compute Region Occupancy** | How much of each region each subject's home range (its `percentile` time density range) covers. |
-| **Filter Rows** |  |
-| **Create Geojson Layer** | Creates a GeoJSON layer definition based on the provided configuration. |
-| **Persist Df** | Persist dataframe to a file or cloud storage object. |
-| **Combine Deckgl Map Layers** | Combine static and grouped map layers into a render-ready list. |
-| **Map Columns** | Maps and transforms the columns of a DataFrame based on the provided parameters. The order of the operations is as follows: drop columns, retain/reorder columns, and rename columns. |
-| **Draw Table** | Creates an HTML table of the provided dataframe. |
-| **Groupbykey** |  |
-| **Persist Text** | Persist text to a file or cloud storage object. |
-| **Draw Map** | Creates a map based on the provided layer definitions and configuration. |
-| **Create Table Widget Single View** | Create a table widget with a single view. |
-| **Persist Text** | Persist text to a file or cloud storage object. |
-| **Merge Widget Views** | Merge widgets with the same `title` and `widget_type`. |
-| **Create Map Widget Single View** | Create a map widget with a single view. |
-| **Merge Widget Views** | Merge widgets with the same `title` and `widget_type`. |
-| **Gather Dashboard** |  |
+## What it produces
+
+- **Home Range Map**: each subject's elliptical time-density home range, coloured by percentile (50% to 99.9%), drawn over the chosen regions with EarthRanger's own colours.
+- **Occupancy table**: for each subject and each region its home range reaches:
+
+  | Column | Meaning |
+  |---|---|
+  | Subject Name | The subject |
+  | region | The region's name |
+  | Region Area (km²) | The whole region's area |
+  | Area Covered (km²) | The part of the region inside the subject's home range |
+  | Occupancy (%) | Area Covered ÷ Region Area × 100: the share of the region the home range covers |
+
+- **CSV files** of the occupancy table, one per dashboard view.
+
+### How occupancy is measured
+
+- The home range is the subject's **99.9th percentile** elliptical time-density area.
+- Areas are measured in metres in the local UTM zone of the home range, so they stay accurate at any latitude.
+- Regions with the same name are merged into one region first.
+- Only regions with an area are measured. Lines and points, such as roads and outposts, are drawn on the map but left out of the table.
+- Regions the home range doesn't reach are left out of the table.
+- Regions may overlap, so one subject can cover parts of several regions at once.
 
 ## Requirements
 
-- Access to a **EarthRanger** data source, set up as a connection
+- An **EarthRanger** connection set up in the workflow runner.
+- A **subject group** in EarthRanger whose subjects have GPS fixes in the time range.
+- **Regions** saved in EarthRanger as features (polygons), for example in a feature set such as `Boundaries` or with a feature type such as `Conservancy`.
 
 ---
 
 ## 1. Load the Workflow
 
-In the workflow runner, add a new template using this repository's URL. Once added, select
-**subject-occupancy-roi** from the available templates list to load it.
+In the workflow runner, add a new template using this repository's URL. Once added, select **subject-occupancy-roi** from the templates list to load it.
 
 ---
 
 ## 2. Configure the Workflow
 
-You'll be prompted to fill in the following parameters before running.
-
 ### Set Workflow Details
 
 | Field | Description | Default |
 |---|---|---|
-| Workflow Name *(required)* |  | — |
-| Workflow Description |  | `` |
+| Workflow Name *(required)* | A short name to identify this run | — |
+| Workflow Description | Optional notes about the run | empty |
+
+### Set Groupers
+
+How the dashboard is split into views.
+
+| Field | Description | Default |
+|---|---|---|
+| Group by | Add **Category → Subject Name** to give each subject its own view of the map and table. Leave the list empty to show every subject together in one view. | empty (one view) |
+
+Category is limited to **Subject Name**. The form also offers **Time** and **Spatial** grouping, but this workflow doesn't support them yet: leave them out (see Troubleshooting).
 
 ### Set Time Range
 
 | Field | Description | Default |
 |---|---|---|
-| Since *(required)* | The start time | — |
-| Until *(required)* | The end time | — |
-| Timezone |  | — |
+| Since *(required)* | Start of the period to analyse | — |
+| Until *(required)* | End of the period to analyse | — |
+| Timezone | Optional timezone for Since/Until | — |
 
 ### Connect to EarthRanger
 
 | Field | Description | Default |
 |---|---|---|
-| Data source *(required)* | Select one of your configured data sources. | — |
+| Data source *(required)* | The EarthRanger connection to use | — |
+
+### Basemap URLs
+
+The map imagery under the home ranges and regions. The defaults can be left as they are.
+
+### Regions
+
+The EarthRanger features to measure occupancy in. They are also drawn on the map.
+
+| Field | Description | Default |
+|---|---|---|
+| Select regions by | How to pick the regions (see below) | Feature sets |
+
+| Option | Field | Description |
+|---|---|---|
+| Feature sets *(default)* | Feature set names | Every feature in each named set becomes a region, e.g. `Boundaries`. Leave empty to use every feature set on the site. |
+| Feature types | Feature type names | Every feature of these types becomes a region, e.g. `Conservancy` or `Park`, whichever set it is in. |
+| Feature IDs | Feature IDs | Individual features, by their EarthRanger ID. |
+
+Names must match EarthRanger exactly, including capitals. A wrong name stops the run with a list of the names that exist.
+
+> Leaving **Feature sets** empty fetches every feature on the site, which can include large sets such as roads. Name the sets or types you need to keep runs quick.
 
 ### Subject Group Name
 
 | Field | Description | Default |
 |---|---|---|
-| Subject Group Name *(required)* | ⚠️ The use of a group with mixed subtypes could lead to unexpected results | — |
+| Subject Group Name *(required)* | The subject group whose home ranges are measured, picked from a drop-down of the data source's subject groups. ⚠️ A group with mixed subtypes could lead to unexpected results. | — |
+
+---
+
+## 3. Run the Workflow and find the results
+
+Click **Submit**. The workflow fetches the subjects' observations and the regions, builds trajectories, estimates home ranges, measures occupancy and draws the dashboard.
+
+Files are written to the workflow's results folder (`ECOSCOPE_WORKFLOWS_RESULTS`):
+
+| File | Description |
+|---|---|
+| `*.csv` | The occupancy table, one file per dashboard view |
+| `*.html` | The map and the table shown on the dashboard |
 
 ---
 
@@ -97,4 +128,4 @@ You'll be prompted to fill in the following parameters before running.
 pixi run --manifest-path pixi.toml -e default bash dev/pytest-cli.sh subject_occupancy_roi --all
 ```
 
-Documentation: [docs/index.html](docs/index.html).
+The occupancy, region and styling tasks (`get_features`, `compute_region_occupancy`, `style_spatial_features`) come from `ecoscope-workflows-ext-mep`; see the [Technical Guide](docs/technical-guide.html).
