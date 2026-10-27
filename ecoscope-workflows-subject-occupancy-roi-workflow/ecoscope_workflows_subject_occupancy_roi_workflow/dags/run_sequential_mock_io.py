@@ -14,13 +14,11 @@ from ecoscope.platform.tasks.config import set_workflow_details as set_workflow_
 from ecoscope.platform.tasks.filter import set_time_range as set_time_range
 from ecoscope.platform.tasks.groupby import set_groupers as set_groupers
 from ecoscope.platform.tasks.io import set_er_connection as set_er_connection
+from ecoscope.platform.tasks.results import set_base_maps as set_base_maps
 from ecoscope.platform.tasks.skip import (
     any_dependency_skipped as any_dependency_skipped,
 )
 from ecoscope.platform.tasks.skip import any_is_empty_df as any_is_empty_df
-from ecoscope_workflows_ext_custom.tasks.results import (
-    set_base_maps_pydeck as set_base_maps_pydeck,
-)
 from ecoscope_workflows_ext_mep.tasks.io import get_features as get_features
 from wt_contracts import validate as _validate
 from wt_task import task
@@ -42,12 +40,14 @@ from ecoscope.platform.tasks.preprocessing import (
 from ecoscope.platform.tasks.preprocessing import (
     relocations_to_trajectory as relocations_to_trajectory,
 )
+from ecoscope.platform.tasks.results import create_geojson_layer as create_geojson_layer
 from ecoscope.platform.tasks.results import (
     create_map_widget_single_view as create_map_widget_single_view,
 )
 from ecoscope.platform.tasks.results import (
     create_table_widget_single_view as create_table_widget_single_view,
 )
+from ecoscope.platform.tasks.results import draw_map as draw_map
 from ecoscope.platform.tasks.results import draw_table as draw_table
 from ecoscope.platform.tasks.results import gather_dashboard as gather_dashboard
 from ecoscope.platform.tasks.results import merge_widget_views as merge_widget_views
@@ -55,10 +55,6 @@ from ecoscope.platform.tasks.skip import never as never
 from ecoscope.platform.tasks.transformation import apply_color_map as apply_color_map
 from ecoscope.platform.tasks.transformation import convert_crs as convert_crs
 from ecoscope.platform.tasks.transformation import map_columns as map_columns
-from ecoscope_workflows_ext_custom.tasks.results import (
-    create_geojson_layer as create_geojson_layer_1,
-)
-from ecoscope_workflows_ext_custom.tasks.results import draw_map as draw_map_1
 from ecoscope_workflows_ext_mep.tasks.spatial_operations import (
     compute_region_occupancy as compute_region_occupancy,
 )
@@ -67,7 +63,7 @@ from ecoscope_workflows_ext_mep.tasks.spatial_operations import (
 )
 from ecoscope_workflows_ext_ste.tasks.filter import filter_rows as filter_rows
 from ecoscope_workflows_ext_ste.tasks.results import (
-    create_spatial_features_layer as create_spatial_features_layer,
+    create_spatial_features_layer as create_spatial_features_layer_1,
 )
 from ecoscope_workflows_ext_ste.tasks.spatial_operations import (
     calculate_elliptical_time_density_grouped as calculate_elliptical_time_density_grouped,
@@ -155,7 +151,7 @@ def main(params: dict[str, Any], validate_params_schema: bool = True):
     )
 
     base_maps_pydeck = (
-        task(set_base_maps_pydeck)
+        task(set_base_maps)
         .validate()
         .set_task_instance_id("base_maps_pydeck")
         .handle_errors()
@@ -312,23 +308,12 @@ def main(params: dict[str, Any], validate_params_schema: bool = True):
             ],
             unpack_depth=1,
         )
-        .partial(
-            relocations=relocations,
-            trajectory_segment_filter={
-                "min_length_meters": 0.001,
-                "max_length_meters": 100000,
-                "min_time_secs": 1,
-                "max_time_secs": 172800,
-                "min_speed_kmhr": 0.01,
-                "max_speed_kmhr": 500,
-            },
-            **(params.get("to_trajectory") or {}),
-        )
+        .partial(relocations=relocations, **(params.get("to_trajectory") or {}))
         .call()
     )
 
     spatial_features_layer = (
-        task(create_spatial_features_layer)
+        task(create_spatial_features_layer_1)
         .validate()
         .set_task_instance_id("spatial_features_layer")
         .handle_errors()
@@ -441,7 +426,7 @@ def main(params: dict[str, Any], validate_params_schema: bool = True):
             unpack_depth=1,
         )
         .partial(
-            max_zoom=20, pitch=0, bearing=0, **(params.get("view_state_from_gdf") or {})
+            max_zoom=13, pitch=0, bearing=0, **(params.get("view_state_from_gdf") or {})
         )
         .mapvalues(argnames=["gdf"], argvalues=grouped_etd)
     )
@@ -515,7 +500,7 @@ def main(params: dict[str, Any], validate_params_schema: bool = True):
     )
 
     geojson_layer = (
-        task(create_geojson_layer_1)
+        task(create_geojson_layer)
         .validate()
         .set_task_instance_id("geojson_layer")
         .handle_errors()
@@ -528,6 +513,7 @@ def main(params: dict[str, Any], validate_params_schema: bool = True):
             unpack_depth=1,
         )
         .partial(
+            tooltip_columns=["percentile", "percentile_colors"],
             layer_style={
                 "auto_highlight": False,
                 "opacity": 0.225,
@@ -700,7 +686,7 @@ def main(params: dict[str, Any], validate_params_schema: bool = True):
     )
 
     occupancy_map = (
-        task(draw_map_1)
+        task(draw_map)
         .validate()
         .set_task_instance_id("occupancy_map")
         .handle_errors()
@@ -713,9 +699,10 @@ def main(params: dict[str, Any], validate_params_schema: bool = True):
             unpack_depth=1,
         )
         .partial(
+            output_type="html",
             tile_layers=base_maps_pydeck,
             static=False,
-            title="",
+            title=None,
             legend_style={"placement": "bottom-right"},
             max_zoom=20,
             **(params.get("occupancy_map") or {}),

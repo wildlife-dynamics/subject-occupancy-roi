@@ -5,23 +5,15 @@ requirements:
   channel: https://repo.prefix.dev/ecoscope-workflows/
 
 - name: ecoscope-workflows-ext-custom
-  version: ==0.1.0rc14
+  version: ==0.1.4
   channel: https://repo.prefix.dev/ecoscope-workflows-custom/
 
 - name: ecoscope-workflows-ext-ste
-  version: ==0.0.0rc1
-  channel: https://repo.prefix.dev/ecoscope-workflows-custom/
-
-- name: ecoscope-workflows-ext-mnc
-  version: ==1.0.6
-  channel: https://repo.prefix.dev/ecoscope-workflows-custom/
-
-- name: ecoscope-workflows-ext-big-life
-  version: ==1.0.2
+  version: ==0.0.24
   channel: https://repo.prefix.dev/ecoscope-workflows-custom/
 
 - name: ecoscope-workflows-ext-mep
-  version: ==1.10.3
+  version: ==1.10.7
   channel: https://repo.prefix.dev/ecoscope-workflows-custom/
 
 - name: pydeck
@@ -130,9 +122,6 @@ workflow:
 - name: Set Groupers
   id: groupers
   task: set_groupers
-  # partial:
-  #   groupers:
-  #   - index_name: extra__name
 
 - name: Set Time Range
   id: time_range
@@ -146,7 +135,7 @@ workflow:
 
 - name: Basemap URLs
   id: base_maps_pydeck
-  task: set_base_maps_pydeck
+  task: set_base_maps
 
 - name: Get Features
   id: earthranger_features
@@ -212,17 +201,10 @@ workflow:
   task: relocations_to_trajectory
   partial:
     relocations: ${{ workflow.relocations.return }}
-    trajectory_segment_filter:
-      min_length_meters: 0.001
-      max_length_meters: 100000
-      min_time_secs: 1
-      max_time_secs: 172800
-      min_speed_kmhr: 0.01
-      max_speed_kmhr: 500
 
 - name: Create Spatial Features Layer
   id: spatial_features_layer
-  task: create_spatial_features_layer
+  task: ecoscope_workflows_ext_ste.tasks.results.create_spatial_features_layer
   partial:
     geodataframes:
     - ${{ workflow.spatial_features_styled.return }}
@@ -283,7 +265,7 @@ workflow:
   id: view_state_from_gdf
   task: compute_view_state_from_gdf
   partial:
-    max_zoom: 20
+    max_zoom: 13
     pitch: 0
     bearing: 0
   mapvalues:
@@ -331,8 +313,11 @@ workflow:
 
 - name: Create Geojson Layer
   id: geojson_layer
-  task: ecoscope_workflows_ext_custom.tasks.results.create_geojson_layer
+  task: create_geojson_layer
   partial:
+    tooltip_columns: 
+      - percentile 
+      - percentile_colors
     layer_style:
       auto_highlight: false
       opacity: 0.225
@@ -441,11 +426,12 @@ workflow:
 
 - name: Draw Map
   id: occupancy_map
-  task: ecoscope_workflows_ext_custom.tasks.results.draw_map
+  task: draw_map
   partial:
+    output_type: html
     tile_layers: ${{ workflow.base_maps_pydeck.return }}
     static: false
-    title: ''
+    title: null
     legend_style:
       placement: bottom-right
     max_zoom: 20
