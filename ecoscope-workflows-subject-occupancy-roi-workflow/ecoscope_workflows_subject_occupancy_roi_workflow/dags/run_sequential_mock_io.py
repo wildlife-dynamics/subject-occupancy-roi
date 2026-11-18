@@ -12,14 +12,11 @@ from typing import Any
 
 from ecoscope.platform.tasks.config import set_workflow_details as set_workflow_details
 from ecoscope.platform.tasks.filter import set_time_range as set_time_range
-from ecoscope.platform.tasks.groupby import set_groupers as set_groupers
 from ecoscope.platform.tasks.io import set_er_connection as set_er_connection
-from ecoscope.platform.tasks.results import set_base_maps as set_base_maps
 from ecoscope.platform.tasks.skip import (
     any_dependency_skipped as any_dependency_skipped,
 )
 from ecoscope.platform.tasks.skip import any_is_empty_df as any_is_empty_df
-from ecoscope_workflows_ext_mep.tasks.io import get_features as get_features
 from wt_contracts import validate as _validate
 from wt_task import task
 from wt_task.testing import create_func_magicmock  # 🧪
@@ -31,6 +28,7 @@ get_subjectgroup_observations = create_func_magicmock(  # 🧪
     func_name="get_subjectgroup_observations",  # 🧪
 )  # 🧪
 from ecoscope.platform.tasks.groupby import groupbykey as groupbykey
+from ecoscope.platform.tasks.groupby import set_groupers as set_groupers
 from ecoscope.platform.tasks.groupby import split_groups as split_groups
 from ecoscope.platform.tasks.io import persist_df as persist_df
 from ecoscope.platform.tasks.io import persist_text as persist_text
@@ -51,10 +49,12 @@ from ecoscope.platform.tasks.results import draw_map as draw_map
 from ecoscope.platform.tasks.results import draw_table as draw_table
 from ecoscope.platform.tasks.results import gather_dashboard as gather_dashboard
 from ecoscope.platform.tasks.results import merge_widget_views as merge_widget_views
+from ecoscope.platform.tasks.results import set_base_maps as set_base_maps
 from ecoscope.platform.tasks.skip import never as never
 from ecoscope.platform.tasks.transformation import apply_color_map as apply_color_map
 from ecoscope.platform.tasks.transformation import convert_crs as convert_crs
 from ecoscope.platform.tasks.transformation import map_columns as map_columns
+from ecoscope_workflows_ext_mep.tasks.io import get_features as get_features
 from ecoscope_workflows_ext_mep.tasks.spatial_operations import (
     compute_region_occupancy as compute_region_occupancy,
 )
@@ -99,10 +99,10 @@ def main(params: dict[str, Any], validate_params_schema: bool = True):
         .call()
     )
 
-    groupers = (
-        task(set_groupers)
+    er_connection = (
+        task(set_er_connection)
         .validate()
-        .set_task_instance_id("groupers")
+        .set_task_instance_id("er_connection")
         .handle_errors()
         .with_tracing()
         .skipif(
@@ -112,7 +112,7 @@ def main(params: dict[str, Any], validate_params_schema: bool = True):
             ],
             unpack_depth=1,
         )
-        .partial(**(params.get("groupers") or {}))
+        .partial(**(params.get("er_connection") or {}))
         .call()
     )
 
@@ -133,10 +133,10 @@ def main(params: dict[str, Any], validate_params_schema: bool = True):
         .call()
     )
 
-    er_connection = (
-        task(set_er_connection)
-        .validate()
-        .set_task_instance_id("er_connection")
+    subjectgroup_observations = (
+        task(get_subjectgroup_observations)
+        # 🧪 validation omitted for mocked IO task (returns pre-loaded example data)
+        .set_task_instance_id("subjectgroup_observations")
         .handle_errors()
         .with_tracing()
         .skipif(
@@ -146,7 +146,33 @@ def main(params: dict[str, Any], validate_params_schema: bool = True):
             ],
             unpack_depth=1,
         )
-        .partial(**(params.get("er_connection") or {}))
+        .partial(
+            time_range=time_range,
+            client=er_connection,
+            raise_on_empty=True,
+            include_details=False,
+            include_subjectsource_details=False,
+            filter="clean",
+            include_subject_additional=False,
+            **(params.get("subjectgroup_observations") or {}),
+        )
+        .call()
+    )
+
+    groupers = (
+        task(set_groupers)
+        .validate()
+        .set_task_instance_id("groupers")
+        .handle_errors()
+        .with_tracing()
+        .skipif(
+            conditions=[
+                any_is_empty_df,
+                any_dependency_skipped,
+            ],
+            unpack_depth=1,
+        )
+        .partial(**(params.get("groupers") or {}))
         .call()
     )
 
@@ -184,32 +210,6 @@ def main(params: dict[str, Any], validate_params_schema: bool = True):
             client=er_connection,
             raise_on_empty=False,
             **(params.get("earthranger_features") or {}),
-        )
-        .call()
-    )
-
-    subjectgroup_observations = (
-        task(get_subjectgroup_observations)
-        # 🧪 validation omitted for mocked IO task (returns pre-loaded example data)
-        .set_task_instance_id("subjectgroup_observations")
-        .handle_errors()
-        .with_tracing()
-        .skipif(
-            conditions=[
-                any_is_empty_df,
-                any_dependency_skipped,
-            ],
-            unpack_depth=1,
-        )
-        .partial(
-            time_range=time_range,
-            client=er_connection,
-            raise_on_empty=True,
-            include_details=False,
-            include_subjectsource_details=False,
-            filter="clean",
-            include_subject_additional=False,
-            **(params.get("subjectgroup_observations") or {}),
         )
         .call()
     )

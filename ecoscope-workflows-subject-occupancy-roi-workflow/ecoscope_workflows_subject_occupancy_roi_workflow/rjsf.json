@@ -18,52 +18,22 @@
       ],
       "type": "object",
       "description": "Add information that will help to differentiate this workflow from another.",
-      "title": "Set Workflow Details"
+      "title": "Workflow Details"
     },
-    "groupers": {
+    "er_connection": {
       "additionalProperties": false,
       "properties": {
-        "groupers": {
-          "default": null,
-          "items": {
-            "anyOf": [
-              {
-                "type": "object",
-                "title": "Category",
-                "properties": {
-                  "index_name": {
-                    "title": "Category",
-                    "type": "string",
-                    "oneOf": [
-                      {
-                        "const": "extra__name",
-                        "title": "Subject Name"
-                      }
-                    ],
-                    "default": "extra__name"
-                  }
-                },
-                "required": [
-                  "index_name"
-                ]
-              },
-              {
-                "$ref": "#/$defs/TemporalGrouper"
-              },
-              {
-                "$ref": "#/$defs/SpatialGrouper"
-              }
-            ],
-            "title": "Group by"
-          },
-          "title": " ",
-          "type": "array",
-          "description": "            Specify how the data should be grouped to create the views for your dashboard.\n            This field is optional; if left blank, all the data will appear in a single view.\n            "
+        "data_source": {
+          "$ref": "#/$defs/EarthRangerConnection",
+          "title": "",
+          "description": "Select one of your configured data sources."
         }
       },
+      "required": [
+        "data_source"
+      ],
       "type": "object",
-      "required": [],
-      "title": "Set Groupers"
+      "title": "Data Source"
     },
     "time_range": {
       "additionalProperties": false,
@@ -96,22 +66,69 @@
       ],
       "type": "object",
       "description": "Choose the period of time to analyze.",
-      "title": "Set Time Range"
+      "title": "Time Range"
     },
-    "er_connection": {
+    "subjectgroup_observations": {
       "additionalProperties": false,
       "properties": {
-        "data_source": {
-          "$ref": "#/$defs/EarthRangerConnection",
-          "title": "",
-          "description": "Select one of your configured data sources."
+        "subject_group_name": {
+          "type": "string",
+          "description": "The EarthRanger subject group whose home ranges are measured, picked from the chosen data source's subject groups. \u26a0\ufe0f The use of a group with mixed subtypes could lead to unexpected results.",
+          "ecoscope:transform": [
+            {
+              "transformer": "EarthRangerEnumResolver",
+              "transformer_kws": {
+                "type": "subject_group_name",
+                "depends_on": "properties.er_connection.properties.data_source.properties.name"
+              }
+            }
+          ]
         }
       },
       "required": [
-        "data_source"
+        "subject_group_name"
       ],
       "type": "object",
-      "title": "Connect to EarthRanger"
+      "title": "Subject Group"
+    },
+    "groupers": {
+      "additionalProperties": false,
+      "properties": {
+        "groupers": {
+          "default": null,
+          "items": {
+            "anyOf": [
+              {
+                "type": "object",
+                "title": "Category",
+                "properties": {
+                  "index_name": {
+                    "title": "Category",
+                    "type": "string",
+                    "oneOf": [
+                      {
+                        "const": "extra__name",
+                        "title": "Subject Name"
+                      }
+                    ],
+                    "default": "extra__name"
+                  }
+                },
+                "required": [
+                  "index_name"
+                ]
+              }
+            ],
+            "title": "Group by"
+          },
+          "title": " ",
+          "type": "array",
+          "description": "Specify how the data should be grouped to create the views for your dashboard. This field is optional; if left blank, all the data will appear in a single view."
+        }
+      },
+      "type": "object",
+      "required": [],
+      "title": "Group Data"
     },
     "base_maps_pydeck": {
       "additionalProperties": false,
@@ -304,7 +321,7 @@
       },
       "type": "object",
       "required": [],
-      "title": "Basemap URLs"
+      "title": "Map Base Layers"
     },
     "earthranger_features": {
       "additionalProperties": false,
@@ -313,33 +330,31 @@
           "anyOf": [
             {
               "type": "object",
-              "title": "Feature sets",
+              "title": "Display Category",
               "properties": {
                 "feature_set_names": {
-                  "title": "Feature set names",
+                  "title": "Select the Display Category you wish to use for the region of interest polygons",
                   "type": "array",
                   "items": {
                     "type": "string"
-                  },
-                  "description": "EarthRanger feature sets to use, e.g. Boundaries. Every feature in each set becomes a region. Leave empty to use every feature set on the site."
+                  }
                 }
               }
             },
             {
               "type": "object",
-              "title": "Feature types",
+              "title": "Feature Type",
               "required": [
                 "feature_type_names"
               ],
               "properties": {
                 "feature_type_names": {
-                  "title": "Feature type names",
+                  "title": "Select the Feature Type you wish to use for the region of interest polygons",
                   "type": "array",
                   "minItems": 1,
                   "items": {
                     "type": "string"
-                  },
-                  "description": "EarthRanger feature types to use, e.g. Conservancy or Park. Every feature of these types becomes a region, whichever feature set it is in."
+                  }
                 }
               }
             },
@@ -366,37 +381,13 @@
             "feature_set_names": []
           },
           "title": "Select regions by",
-          "description": "Choose how to pick the regions: whole feature sets, feature types, or individual features by ID. Names must match EarthRanger exactly, including capitals."
+          "description": "Choose how to pick the regions: by Display Category, by Feature Type, or individual features by ID. Names must match EarthRanger exactly, including capitals."
         }
       },
       "required": [],
       "type": "object",
       "title": "Regions",
       "description": "The EarthRanger features (e.g. conservancies, parks or blocks) to measure each subject's occupancy in. They are also drawn on the map. Only polygons are measured; lines and points are drawn but skipped in the occupancy table."
-    },
-    "subjectgroup_observations": {
-      "additionalProperties": false,
-      "properties": {
-        "subject_group_name": {
-          "title": "Subject Group Name",
-          "type": "string",
-          "description": "The EarthRanger subject group whose home ranges are measured, picked from the chosen data source's subject groups. \u26a0\ufe0f The use of a group with mixed subtypes could lead to unexpected results.",
-          "ecoscope:transform": [
-            {
-              "transformer": "EarthRangerEnumResolver",
-              "transformer_kws": {
-                "type": "subject_group_name",
-                "depends_on": "properties.er_connection.properties.data_source.properties.name"
-              }
-            }
-          ]
-        }
-      },
-      "required": [
-        "subject_group_name"
-      ],
-      "type": "object",
-      "title": "Subject Group Name"
     },
     "to_trajectory": {
       "additionalProperties": false,
@@ -422,10 +413,51 @@
       },
       "required": [],
       "type": "object",
-      "title": "Relocations To Trajectory"
+      "title": "Trajectory Segment Filter"
     }
   },
   "$defs": {
+    "EarthRangerConnection": {
+      "properties": {
+        "name": {
+          "title": "Data Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "EarthRangerConnection",
+      "type": "object"
+    },
+    "TimezoneInfo": {
+      "properties": {
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "tzCode": {
+          "title": "Tzcode",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "utc": {
+          "title": "Utc",
+          "type": "string"
+        }
+      },
+      "required": [
+        "label",
+        "tzCode",
+        "name",
+        "utc"
+      ],
+      "title": "TimezoneInfo",
+      "type": "object"
+    },
     "SpatialGrouper": {
       "properties": {
         "spatial_index_name": {
@@ -497,47 +529,6 @@
         "index_name"
       ],
       "title": "Category",
-      "type": "object"
-    },
-    "TimezoneInfo": {
-      "properties": {
-        "label": {
-          "title": "Label",
-          "type": "string"
-        },
-        "tzCode": {
-          "title": "Tzcode",
-          "type": "string"
-        },
-        "name": {
-          "title": "Name",
-          "type": "string"
-        },
-        "utc": {
-          "title": "Utc",
-          "type": "string"
-        }
-      },
-      "required": [
-        "label",
-        "tzCode",
-        "name",
-        "utc"
-      ],
-      "title": "TimezoneInfo",
-      "type": "object"
-    },
-    "EarthRangerConnection": {
-      "properties": {
-        "name": {
-          "title": "Data Source",
-          "type": "string"
-        }
-      },
-      "required": [
-        "name"
-      ],
-      "title": "EarthRangerConnection",
       "type": "object"
     },
     "FeaturesById": {
@@ -654,12 +645,12 @@
     },
     "ui:order": [
       "workflow_details",
-      "groupers",
-      "time_range",
       "er_connection",
+      "time_range",
+      "subjectgroup_observations",
+      "groupers",
       "base_maps_pydeck",
       "earthranger_features",
-      "subjectgroup_observations",
       "to_trajectory"
     ]
   },
