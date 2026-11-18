@@ -1,5 +1,7 @@
 # Subject Occupancy in Regions
 
+![Home Range Map (Sample EarthRanger data)](resources/thumbnail.png)
+
 Estimates each subject's home range from its EarthRanger GPS tracks, then measures how much of each region (for example a conservancy, park or census block) that home range covers. The results are shown as a map of the home ranges over the regions, plus a table of each subject's occupancy per region.
 
 Documentation: [docs/index.html](docs/index.html) (User Guide, Technical Guide and Troubleshooting).

@@ -4,3 +4,25 @@ designer-run:
   params:
     workflow_details:
       name: ab
+
+sample-er:
+  name: Sample EarthRanger
+  description: >-
+    Live run against the local Sample EarthRanger (Africa scenario): the Laikipia giraffes'
+    home ranges over the Laikipia Conservancies Display Category.
+  mock_io: false
+  params:
+    workflow_details:
+      name: Giraffe occupancy, Laikipia
+    er_connection:
+      data_source:
+        name: Sample EarthRanger
+    time_range:
+      since: '2026-06-01T00:00:00'
+      until: '2026-08-31T23:59:59'
+    subjectgroup_observations:
+      subject_group_name: Giraffes
+    earthranger_features:
+      selection:
+        feature_set_names:
+        - Laikipia Conservancies

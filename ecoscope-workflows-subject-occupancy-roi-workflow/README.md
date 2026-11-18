@@ -5,8 +5,8 @@
 
 ```yaml
 # fingerprint:
-artifacts_sha256_basic: df2cfc9f543209400400f74b7ee0a419af489811405501e9c14c8a8a8245b13a
-artifacts_sha256_strict: cd5140bb384bca08e57c7b7f551470c585b1a91d6f768b4853f49f9268af0be2
+artifacts_sha256_basic: 45d86b215e9300379980b5957b0e263edab885a3a129beede28256350871ac01
+artifacts_sha256_strict: 67c64633578b41306479356acc589fb40b21c465e37159167455780a05e21ae3
 installed_requirements:
 - channel: https://repo.prefix.dev/ecoscope-workflows/
   name: ecoscope-platform
@@ -24,7 +24,7 @@ installed_requirements:
   name: pydeck
   version: {version: ==0.9.2}
 params_sha256: db8cc978244016f47ebba712727f1c0755fb40c0d77020a6458056a9f376e8d1
-spec_sha256: bedff380e1050a6c5ec1ed65439070a2293cc8543965958474988e3bd26e13f0
+spec_sha256: c859661417cc9307508d4f98f634a3b1fc564c9d60fc450a25b29301bab56777
 
 ```
 
